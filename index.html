@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Device Permission Demo</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#f3f5f7;margin:0;padding:18px}
+main{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:18px;box-shadow:0 4px 18px #0001}
+button{padding:12px 15px;margin:5px;border:0;border-radius:10px;font-size:15px}
+video{width:100%;border-radius:14px;background:#111;margin-top:10px}
+pre{background:#f3f3f3;padding:12px;border-radius:10px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<main>
+<h2>📷🎤📍 Device Permission</h2>
+<p>যে তথ্য ব্যবহার করতে চাও, সংশ্লিষ্ট বোতামে চাপ দিয়ে অনুমতি দাও।</p>
+<button onclick="camera()">📷 Camera</button>
+<button onclick="microphone()">🎤 Microphone</button>
+<button onclick="locationPermission()">📍 Location</button>
+<button onclick="battery()">🔋 Battery</button>
+<video id="video" autoplay playsinline muted></video>
+<pre id="out">এখনো কোনো তথ্য নেওয়া হয়নি।</pre>
+</main>
+<script>
+const out=document.getElementById('out');
+const show=x=>out.textContent=JSON.stringify(x,null,2);
+let info={device:{userAgent:navigator.userAgent,language:navigator.language,platform:navigator.platform}};
+
+async function camera(){
+ try{
+  const s=await navigator.mediaDevices.getUserMedia({video:true});
+  document.getElementById('video').srcObject=s;
+  show({...info,camera:"permission granted"});
+ }catch(e){show({error:"Camera permission denied/unavailable"});}
+}
+async function microphone(){
+ try{
+  const s=await navigator.mediaDevices.getUserMedia({audio:true});
+  s.getTracks().forEach(t=>t.stop());
+  show({...info,microphone:"permission granted",recording:false});
+ }catch(e){show({error:"Microphone permission denied/unavailable"});}
+}
+function locationPermission(){
+ if(!navigator.geolocation)return show({error:"Location unsupported"});
+ navigator.geolocation.getCurrentPosition(p=>{
+  info.location={latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy};
+  show(info);
+ },()=>show({error:"Location permission denied/unavailable"}));
+}
+async function battery(){
+ if(!navigator.getBattery)return show({error:"Battery API unsupported"});
+ const b=await navigator.getBattery();
+ info.battery={level:b.level,charging:b.charging};
+ show(info);
+}
+</script>
+</body>
+</html>
